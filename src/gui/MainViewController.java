@@ -3,6 +3,7 @@ package gui;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 import application.Main;
 import gui.util.Alerts;
@@ -33,15 +34,17 @@ public class MainViewController implements Initializable{
 	
 	@FXML
 	public void onMenuItemDepartmentAction() {
-		loadView2("/gui/DepartmentList.fxml");	
+		loadView("/gui/DepartmentList.fxml", (DepartmentListController controller)->{//injetar dependencia do controller com EXPRESSOES LAMBDA (parametrizando, ou seja, virando 1 parametro da funcao)
+			controller.setDepartmentService(new DepartmentService());
+			controller.updateTableView();
+		});	
 	}
 	
 	@FXML
 	public void onMenuItemAboutAction() {
-		loadView("/gui/About.fxml");
+		loadView("/gui/About.fxml", x -> {});
 		
 	}
-	
 	
 	
 	@Override
@@ -49,29 +52,8 @@ public class MainViewController implements Initializable{
 		// TODO Auto-generated method stub
 		
 	}
-	
-	private synchronized void loadView(String absoluteName) {
-		try {
-			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
-			VBox newVBox = loader.load();
-			
-			Scene mainScene = Main.getMainScene();
-			VBox mainVBox = (VBox) ((ScrollPane) mainScene.getRoot()).getContent(); //vai pegar o primeiro elemento da MainView que eh o ScrollPane e depois com get content vai pegar a VBox
-					// foram feitos 2 casting, 1 para scrollPane para p get root, outro para VBox para o getContent.
-			
-			Node mainMenu = mainVBox.getChildren().get(0); //o primeiro filho do Vbox da janela principal (o MainMenu)
-			mainVBox.getChildren().clear(); // limpar todos os filhos
-			mainVBox.getChildren().add(mainMenu);
-			mainVBox.getChildren().addAll(newVBox.getChildren());
-		
-		}
-		catch (IOException e) {
-			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);
-		}
-		
-	}
-	
-	private synchronized void loadView2(String absoluteName) {
+															//para inciar a expressao lambda 
+	private synchronized <T> void loadView(String absoluteName, Consumer<T> initializingAction) {
 		try {
 			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
 			VBox newVBox = loader.load();
@@ -85,9 +67,9 @@ public class MainViewController implements Initializable{
 			mainVBox.getChildren().add(mainMenu);
 			mainVBox.getChildren().addAll(newVBox.getChildren());
 			
-			DepartmentListController controller = loader.getController(); //injetar dependencia do controller
-			controller.setDepartmentService(new DepartmentService());
-			controller.updateTableView();
+			//vai executar o q for passado como argumento (a expressao lambda) qnd for chamada a funcao 
+			T controller = loader.getController();
+			initializingAction.accept(controller);
 		
 		}
 		catch (IOException e) {
@@ -95,5 +77,9 @@ public class MainViewController implements Initializable{
 		}
 		
 	}
+	
+	
+	
+	
 
 }
