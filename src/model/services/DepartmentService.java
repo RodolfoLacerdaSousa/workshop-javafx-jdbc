@@ -20,5 +20,14 @@ public class DepartmentService {
 		list.add(new Department(3, "Eletronics"));
 		return list;*/
 	}
+	
+	public void saveOfUpdate(Department obj) {
+		if (obj.getId() == null) { //significa q eh 1 novo objeto
+			dao.insert(obj);
+		}
+		else {
+			dao.update(obj);
+		}
+	}
 
 }
